@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<html>
+<head>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js">
+</script>
+<script language="javascript" type="text/javascript">
+    $(function() {
+        var conn = null;
+        window.onload = connect;
+        var f = document.getElementById('f');
+        function connect() {
+            if (conn != null) {
+            conn.close();
+            conn=null;
+            }
+            var wsUri = (window.location.protocol=='https:'&&'wss://'||'ws://')+window.location.host;
+            conn = new WebSocket(wsUri);
+            conn.onopen = function() {
+                conn.send('cb_state');
+            };
+            conn.onmessage = function(e) {
+                if (e.data == 1) {
+                    document.getElementById('cb').checked = true;
+                } else if (e.data == 0) {
+                    document.getElementById('cb').checked = false;
+                    update_cb();
+                } else {
+                    $('#status').text(e.data);
+                }
+            };
+            conn.onclose = function() {
+            };
+    
+        }
+        $('#on').click(function() {
+            conn.send('on');
+            return false;
+        });
+        $('#restart').click(function() {
+            conn.send('off');
+            conn.send('on');
+            return false;
+        });
+        $('#off').click(function() {
+            conn.send('off');
+            return false;
+        });
+        $('#cb').change(function() {
+            update_cb();
+        });
+        function update_cb(){
+            f.on.disabled = !f.cb.checked;
+            f.restart.disabled = !f.cb.checked;
+            f.off.disabled = !f.cb.checked;
+            conn.send(f.cb.checked.toString());
+        }
+    });
+</script>
+</head>
+<body>
+<form id='f' onsubmit="return false;">
+    <input type="checkbox" id = 'cb'/>Включить сервис <br>
+    <button id="on">Запустить</button>
+    <button id="restart">Перезапустить</button>
+    <button id="off">Остановить</button>&nbsp;|&nbsp;
+    <span id="status"></span>
+</form>
+</body>
+</html>
